@@ -100,7 +100,7 @@ app.MapGet("/cotas-vendidas/{iddarifa}", (int iddarifa, RFAW.Data.AppDbContext d
 
 app.MapGet("/criar-rifa/{quantidade}", (int quantidade, string titulo, float preco, RFAW.Data.AppDbContext db) =>
 {
-    var novarifa = new RFAW.Models.NovaPasta.Rifa
+    var novarifa = new RFAW.Models.Rifa
     {
         Titulo = titulo,
         QuantidadeCotas = quantidade,
@@ -110,7 +110,7 @@ app.MapGet("/criar-rifa/{quantidade}", (int quantidade, string titulo, float pre
 
     for (int i = 1; i <= novarifa.QuantidadeCotas; i++) 
     {
-        var novaCota = new RFAW.Models.NovaPasta.Cota
+        var novaCota = new RFAW.Models.Cota
         {
             Numero = i
         };

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Primitives;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace RFAW.Models.NovaPasta
+namespace RFAW.Models
 {
     public class Rifa
     {

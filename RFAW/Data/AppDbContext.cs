@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RFAW.Models;
-using RFAW.Models.NovaPasta;
 
 namespace RFAW.Data;
 
@@ -10,4 +9,5 @@ public class AppDbContext : DbContext
 
     public DbSet<Rifa> Rifas { get; set; }
     public DbSet<Cota> Cotas { get; set; }
+    public DbSet<Usuario> Usuarios { get; set; }
 }
