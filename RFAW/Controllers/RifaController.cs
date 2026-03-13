@@ -5,16 +5,15 @@ using RFAW.Models;
 
 namespace RFAW.Controllers
 {
-
     public class PedidoCompra
     {
         public int RifaId { get; set; }
         public List<int> Numeros { get; set; }
         public string NomePagador { get; set; }
         public string FormaPagamento { get; set; }
+        public string CompradorEmail { get; set; }
     }
 
-    
     public class PedidoAprovacao
     {
         public int RifaId { get; set; }
@@ -69,6 +68,7 @@ namespace RFAW.Controllers
                     cota.Status = "Reservado";
                     cota.Nome = pedido.NomePagador;
                     cota.Tel = pedido.FormaPagamento;
+                    cota.CompradorEmail = pedido.CompradorEmail;
                 }
             }
 
@@ -85,9 +85,28 @@ namespace RFAW.Controllers
             var cota = rifa.Cotas.FirstOrDefault(c => c.Numero == pedido.Numero);
             if (cota != null && cota.Status == "Reservado")
             {
-                cota.Status = "Vendido"; 
+                cota.Status = "Vendido";
                 await _context.SaveChangesAsync();
                 return Ok(new { mensagem = "Pagamento aprovado com sucesso!" });
+            }
+
+            return BadRequest("Número não encontrado ou não está reservado.");
+        }
+        [HttpPost("rejeitar")]
+        public async Task<IActionResult> RejeitarPagamento([FromBody] PedidoAprovacao pedido)
+        {
+            var rifa = await _context.Rifas.Include(r => r.Cotas).FirstOrDefaultAsync(r => r.Id == pedido.RifaId);
+            if (rifa == null) return NotFound("Rifa não encontrada.");
+
+            var cota = rifa.Cotas.FirstOrDefault(c => c.Numero == pedido.Numero);
+            if (cota != null && cota.Status == "Reservado")
+            {
+                cota.Status = "Disponivel"; 
+                cota.Nome = ""; 
+                cota.Tel = "";
+                cota.CompradorEmail = "";
+                await _context.SaveChangesAsync();
+                return Ok(new { mensagem = "Reserva cancelada com sucesso!" });
             }
 
             return BadRequest("Número não encontrado ou não está reservado.");

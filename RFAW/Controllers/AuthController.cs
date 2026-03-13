@@ -5,6 +5,12 @@ using RFAW.Models;
 
 namespace RFAW.Controllers
 {
+    public class DadosLogin
+    {
+        public string Email { get; set; }
+        public string Senha { get; set; }
+    }
+
     [Route("api/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
@@ -16,41 +22,28 @@ namespace RFAW.Controllers
             _context = context;
         }
 
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] Usuario loginInfo)
+        [HttpPost("cadastro")]
+        public async Task<IActionResult> Cadastrar([FromBody] Usuario novoUsuario)
         {
-            var usuario = await _context.Usuarios
-                .FirstOrDefaultAsync(u => u.Email == loginInfo.Email && u.Senha == loginInfo.Senha);
+            var existe = await _context.Usuarios.AnyAsync(u => u.Email == novoUsuario.Email);
+            if (existe) return BadRequest("E-mail já cadastrado!");
 
-            if (usuario == null)
-            {
-                return Unauthorized(new { mensagem = "E-mail ou senha incorretos!" });
-            }
-
-            return Ok(new
-            {
-                id = usuario.Id,
-                nome = usuario.Nome,
-                email = usuario.Email,
-                isAdmin = usuario.IsAdmin
-            });
-        }
-
-        [HttpPost("registrar")]
-        public async Task<IActionResult> Registrar([FromBody] Usuario novoUsuario)
-        {
-            var emailJaExiste = await _context.Usuarios.AnyAsync(u => u.Email == novoUsuario.Email);
-
-            if (emailJaExiste)
-            {
-                return BadRequest(new { mensagem = "Esse e-mail já está cadastrado!" });
-            }
-            novoUsuario.IsAdmin = false;
+            novoUsuario.Moedas = 50;
 
             _context.Usuarios.Add(novoUsuario);
             await _context.SaveChangesAsync();
+            return Ok(novoUsuario);
+        }
 
-            return Ok(new { mensagem = "Cadastro realizado com sucesso! Agora você já pode fazer login." });
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] DadosLogin loginDados)
+        {
+            var usuario = await _context.Usuarios
+                .FirstOrDefaultAsync(u => u.Email == loginDados.Email && u.Senha == loginDados.Senha);
+
+            if (usuario == null) return Unauthorized("E-mail ou senha incorretos.");
+
+            return Ok(usuario);
         }
     }
 }

@@ -5,6 +5,7 @@ namespace RFAW.Models
 {
     public class Rifa
     {
+        public string CriadorEmail { get; set; } = "";
         public int Id { get; set; }
         public string Titulo { get; set; }
         public float Preço { get; set; }
@@ -13,6 +14,7 @@ namespace RFAW.Models
     }
     public class Cota
     {
+        public string CompradorEmail { get; set; } = "";
         public int Id { get; set; }
         public int Numero { get; set; }
         public string Status { get; set; } = "Disponivel";
