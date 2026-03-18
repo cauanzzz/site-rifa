@@ -34,62 +34,13 @@ namespace RFAW.Controllers
         [HttpGet]
         public async Task<IActionResult> GetRifas()
         {
-            var rifasResumo = await _context.Rifas
-                .Select(r => new
-                {
-                    Id = r.Id,
-                    Titulo = r.Titulo,
-                    Descricao = r.Descricao,
-                    Premio = r.Premio,
-                    Preço = r.Preço,
-                    QuantidadeCotas = r.QuantidadeCotas,
-                    Imagem = r.Imagem,
-                    DataSorteio = r.DataSorteio,
-                    CriadorEmail = r.CriadorEmail,
-                    Cotas = r.Cotas
-                        .Where(c => c.Status != "Disponivel")
-                        .Select(c => new
-                        {
-                            Numero = c.Numero,
-                            Status = c.Status,
-                            CompradorEmail = c.CompradorEmail,
-                            NomePagador = c.Nome,
-                            FormaPagamento = c.Tel,
-                            DataReserva = c.DataReserva,
-                        }),
-
-                    CotasVendidas = r.Cotas.Count(c => c.Status != "Disponivel")
-                })
-                .ToListAsync();
-
-            return Ok(rifasResumo);
-        }
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetRifaCompleta(int id)
-        {
-            var rifa = await _context.Rifas.Include(r => r.Cotas).FirstOrDefaultAsync(r => r.Id == id);
-            if (rifa == null) return NotFound("Rifa não encontrada.");
-            return Ok(rifa);
+            var rifas = await _context.Rifas.Include(r => r.Cotas).ToListAsync();
+            return Ok(rifas);
         }
 
         [HttpPost]
         public async Task<IActionResult> CriarRifa([FromBody] Rifa novaRifa)
         {
-            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == novaRifa.CriadorEmail);
-            if (usuario == null) return BadRequest("Usuário não encontrado.");
-
-            int custoMoedas = (int)Math.Ceiling(novaRifa.QuantidadeCotas / 10.0);
-
-            if (!usuario.IsAdmin)
-            {
-                if (usuario.Moedas < custoMoedas)
-                {
-                    return BadRequest($"Saldo insuficiente. Você precisa de {custoMoedas} moedas, mas tem apenas {usuario.Moedas}.");
-                }
-                usuario.Moedas -= custoMoedas;
-            }
-
             if (novaRifa.Cotas == null) novaRifa.Cotas = new List<Cota>();
 
             for (int i = 1; i <= novaRifa.QuantidadeCotas; i++)
@@ -100,12 +51,7 @@ namespace RFAW.Controllers
             _context.Rifas.Add(novaRifa);
             await _context.SaveChangesAsync();
 
-            return Ok(new
-            {
-                mensagem = "Rifa criada com sucesso!",
-                id = novaRifa.Id,
-                moedasRestantes = usuario.Moedas
-            });
+            return Ok(new { mensagem = "Rifa criada com sucesso!", id = novaRifa.Id });
         }
 
         [HttpPost("comprar")]
@@ -123,7 +69,6 @@ namespace RFAW.Controllers
                     cota.Nome = pedido.NomePagador;
                     cota.Tel = pedido.FormaPagamento;
                     cota.CompradorEmail = pedido.CompradorEmail;
-                    cota.DataReserva = DateTime.Now;
                 }
             }
 
@@ -147,7 +92,6 @@ namespace RFAW.Controllers
 
             return BadRequest("Número não encontrado ou não está reservado.");
         }
-
         [HttpPost("rejeitar")]
         public async Task<IActionResult> RejeitarPagamento([FromBody] PedidoAprovacao pedido)
         {
@@ -157,8 +101,8 @@ namespace RFAW.Controllers
             var cota = rifa.Cotas.FirstOrDefault(c => c.Numero == pedido.Numero);
             if (cota != null && cota.Status == "Reservado")
             {
-                cota.Status = "Disponivel";
-                cota.Nome = "";
+                cota.Status = "Disponivel"; 
+                cota.Nome = ""; 
                 cota.Tel = "";
                 cota.CompradorEmail = "";
                 await _context.SaveChangesAsync();
@@ -166,19 +110,6 @@ namespace RFAW.Controllers
             }
 
             return BadRequest("Número não encontrado ou não está reservado.");
-        }
-
-        [HttpGet("promover/{email}")]
-        public async Task<IActionResult> PromoverAdmin(string email)
-        {
-            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
-            if (usuario == null) return NotFound("Usuário não encontrado.");
-
-            usuario.IsAdmin = true;
-            usuario.Moedas = 999999;
-
-            await _context.SaveChangesAsync();
-            return Ok($"Parabéns! O usuário {email} agora é o ADMINISTRADOR SUPREMO do sistema! 👑");
         }
     }
 }
