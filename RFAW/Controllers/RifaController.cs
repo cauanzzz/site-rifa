@@ -30,7 +30,6 @@ namespace RFAW.Controllers
         {
             _context = context;
         }
-
         [HttpGet]
         public async Task<IActionResult> GetRifas()
         {
@@ -46,6 +45,11 @@ namespace RFAW.Controllers
                     Imagem = r.Imagem,
                     DataSorteio = r.DataSorteio,
                     CriadorEmail = r.CriadorEmail,
+                    CriadorNome = _context.Usuarios
+                        .Where(u => u.Email == r.CriadorEmail)
+                        .Select(u => u.Nome)
+                        .FirstOrDefault(),
+
                     Cotas = r.Cotas
                         .Where(c => c.Status != "Disponivel")
                         .Select(c => new
@@ -179,6 +183,50 @@ namespace RFAW.Controllers
 
             await _context.SaveChangesAsync();
             return Ok($"Parabéns! O usuário {email} agora é o ADMINISTRADOR SUPREMO do sistema! 👑");
+        }
+        [HttpGet("buscar-por-criador")]
+        public async Task<IActionResult> BuscarRifasPorCriador([FromQuery] string nome)
+        {
+            if (string.IsNullOrWhiteSpace(nome))
+            {
+                return BadRequest("Digite um nome para buscar.");
+            }
+
+            var rifas = await _context.Rifas
+                .Where(r => _context.Usuarios.Any(u => u.Email == r.CriadorEmail && u.Nome.Contains(nome)))
+                .Select(r => new
+                {
+                    Id = r.Id,
+                    Titulo = r.Titulo,
+                    Descricao = r.Descricao,
+                    Premio = r.Premio,
+                    Preço = r.Preço,
+                    QuantidadeCotas = r.QuantidadeCotas,
+                    Imagem = r.Imagem,
+                    DataSorteio = r.DataSorteio,
+                    CriadorEmail = r.CriadorEmail,
+                    CriadorNome = _context.Usuarios.Where(u => u.Email == r.CriadorEmail).Select(u => u.Nome).FirstOrDefault(),
+                    Cotas = r.Cotas
+                        .Where(c => c.Status != "Disponivel")
+                        .Select(c => new
+                        {
+                            Numero = c.Numero,
+                            Status = c.Status,
+                            CompradorEmail = c.CompradorEmail,
+                            NomePagador = c.Nome,
+                            FormaPagamento = c.Tel,
+                            DataReserva = c.DataReserva
+                        }),
+                    CotasVendidas = r.Cotas.Count(c => c.Status != "Disponivel")
+                })
+                .ToListAsync();
+
+            if (!rifas.Any())
+            {
+                return NotFound("Nenhuma rifa encontrada para este criador.");
+            }
+
+            return Ok(rifas);
         }
     }
 }
