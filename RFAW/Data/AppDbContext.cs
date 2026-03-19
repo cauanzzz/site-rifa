@@ -10,5 +10,6 @@ namespace RFAW.Data
         public DbSet<Rifa> Rifas { get; set; }
         public DbSet<Cota> Cotas { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
+        public DbSet<MensagemSuporte> MensagensSuporte { get; set; }
     }
 }
