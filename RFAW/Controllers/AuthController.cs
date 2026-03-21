@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using RFAW.Data;
 using RFAW.Models;
+using BCrypt.Net;
 
 namespace RFAW.Controllers
 {
@@ -29,6 +30,7 @@ namespace RFAW.Controllers
             if (existe) return BadRequest("E-mail já cadastrado!");
 
             novoUsuario.Moedas = 50;
+            novoUsuario.Senha = BCrypt.Net.BCrypt.HashPassword(novoUsuario.Senha);
 
             _context.Usuarios.Add(novoUsuario);
             await _context.SaveChangesAsync();
@@ -39,9 +41,24 @@ namespace RFAW.Controllers
         public async Task<IActionResult> Login([FromBody] DadosLogin loginDados)
         {
             var usuario = await _context.Usuarios
-                .FirstOrDefaultAsync(u => u.Email == loginDados.Email && u.Senha == loginDados.Senha);
+                .FirstOrDefaultAsync(u => u.Email == loginDados.Email);
 
-            if (usuario == null) return Unauthorized("E-mail ou senha incorretos.");
+            if (usuario == null)
+            {
+                return Unauthorized("E-mail ou senha incorretos.");
+            }
+
+            try
+            {
+                if (!BCrypt.Net.BCrypt.Verify(loginDados.Senha, usuario.Senha))
+                {
+                    return Unauthorized("E-mail ou senha incorretos.");
+                }
+            }
+            catch (BCrypt.Net.SaltParseException)
+            {
+                return Unauthorized("E-mail ou senha incorretos.");
+            }
 
             return Ok(usuario);
         }
