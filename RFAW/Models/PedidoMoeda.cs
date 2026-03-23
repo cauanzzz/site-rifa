@@ -11,5 +11,8 @@ namespace RFAW.Models
         public decimal ValorPago { get; set; }
         public string Status { get; set; } = "Pendente";
         public DateTime DataSolicitacao { get; set; } = DateTime.Now;
+        public string NomeTitularPix { get; set; } = "";
+        
+
     }
 }

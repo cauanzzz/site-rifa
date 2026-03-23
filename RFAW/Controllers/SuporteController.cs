@@ -39,5 +39,15 @@ namespace RFAW.Controllers
                                           .ToListAsync();
             return Ok(mensagens);
         }
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> ResolverMensagem(int id)
+        {
+            var mensagem = await _context.MensagensSuporte.FindAsync(id);
+            if (mensagem == null) return NotFound("Mensagem não encontrada.");
+            _context.MensagensSuporte.Remove(mensagem);
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
     }
 }

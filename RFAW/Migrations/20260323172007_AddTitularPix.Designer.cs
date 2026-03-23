@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RFAW.Data;
 
@@ -11,9 +12,11 @@ using RFAW.Data;
 namespace RFAW.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260323172007_AddTitularPix")]
+    partial class AddTitularPix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -149,9 +152,6 @@ namespace RFAW.Migrations
                     b.Property<string>("Imagem")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("NumeroSorteado")
-                        .HasColumnType("int");
-
                     b.Property<string>("Premio")
                         .HasColumnType("nvarchar(max)");
 
@@ -160,10 +160,6 @@ namespace RFAW.Migrations
 
                     b.Property<int>("QuantidadeCotas")
                         .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Titulo")
                         .IsRequired()

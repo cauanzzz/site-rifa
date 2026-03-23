@@ -14,6 +14,8 @@ namespace RFAW.Models
         public float Preço { get; set; }
         public int QuantidadeCotas { get; set; }
         public DateTime? DataSorteio { get; set; }
+        public string Status { get; set; } = "Ativa";
+        public int? NumeroSorteado { get; set; }
         public List<Cota> Cotas { get; set; } = new();
     }
 

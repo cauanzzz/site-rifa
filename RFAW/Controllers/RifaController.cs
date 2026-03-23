@@ -30,6 +30,7 @@ namespace RFAW.Controllers
         {
             _context = context;
         }
+
         [HttpGet]
         public async Task<IActionResult> GetRifas()
         {
@@ -45,11 +46,12 @@ namespace RFAW.Controllers
                     Imagem = r.Imagem,
                     DataSorteio = r.DataSorteio,
                     CriadorEmail = r.CriadorEmail,
+                    Status = r.Status,
+                    NumeroSorteado = r.NumeroSorteado,
                     CriadorNome = _context.Usuarios
                         .Where(u => u.Email == r.CriadorEmail)
                         .Select(u => u.Nome)
                         .FirstOrDefault(),
-
                     Cotas = r.Cotas
                         .Where(c => c.Status != "Disponivel")
                         .Select(c => new
@@ -109,6 +111,44 @@ namespace RFAW.Controllers
                 id = novaRifa.Id,
                 moedasRestantes = usuario.Moedas
             });
+        }
+
+        [HttpPost("{id}/sortear")]
+        public async Task<IActionResult> SortearRifa(int id)
+        {
+            try
+            {
+                var rifa = await _context.Rifas
+                    .Include(r => r.Cotas)
+                    .FirstOrDefaultAsync(r => r.Id == id);
+
+                if (rifa == null) return NotFound("Rifa não encontrada.");
+                if (rifa.Status == "Encerrada") return BadRequest("Esta rifa já foi sorteada!");
+
+                var cotasValidas = rifa.Cotas.Where(c => c.Status == "Vendido" || c.Status == "Reservado").ToList();
+
+                if (cotasValidas.Count == 0) return BadRequest("Nenhum número foi vendido ainda.");
+
+                var random = new Random();
+                int indiceSorteado = random.Next(cotasValidas.Count);
+                var cotaGanhadora = cotasValidas[indiceSorteado];
+
+                rifa.NumeroSorteado = cotaGanhadora.Numero;
+                rifa.Status = "Encerrada";
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    mensagem = "Sorteio realizado com sucesso!",
+                    numeroSorteado = rifa.NumeroSorteado,
+                    ganhador = string.IsNullOrEmpty(cotaGanhadora.Nome) ? cotaGanhadora.CompradorEmail : cotaGanhadora.Nome
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Erro ao sortear: {ex.Message}");
+            }
         }
 
         [HttpPost("comprar")]
@@ -184,6 +224,7 @@ namespace RFAW.Controllers
             await _context.SaveChangesAsync();
             return Ok($"Parabéns! O usuário {email} agora é o ADMINISTRADOR SUPREMO do sistema! 👑");
         }
+
         [HttpGet("buscar-por-criador")]
         public async Task<IActionResult> BuscarRifasPorCriador([FromQuery] string nome)
         {
@@ -205,6 +246,8 @@ namespace RFAW.Controllers
                     Imagem = r.Imagem,
                     DataSorteio = r.DataSorteio,
                     CriadorEmail = r.CriadorEmail,
+                    Status = r.Status,
+                    NumeroSorteado = r.NumeroSorteado,
                     CriadorNome = _context.Usuarios.Where(u => u.Email == r.CriadorEmail).Select(u => u.Nome).FirstOrDefault(),
                     Cotas = r.Cotas
                         .Where(c => c.Status != "Disponivel")

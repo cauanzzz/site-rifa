@@ -19,10 +19,20 @@ namespace RFAW.Controllers
         [HttpPost("solicitar-moedas")]
         public async Task<IActionResult> SolicitarMoedas([FromBody] PedidoMoeda pedido)
         {
-            _context.PedidosMoeda.Add(pedido);
-            await _context.SaveChangesAsync();
+            try
+            {
+                pedido.Status = "Pendente";
+                pedido.DataSolicitacao = DateTime.Now;
 
-            return Ok(pedido);
+                _context.PedidosMoeda.Add(pedido);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { mensagem = "Solicitação salva com sucesso!" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { erro = ex.Message, detalhe = ex.InnerException?.Message });
+            }
         }
 
         [HttpGet("pedidos-moedas")]
@@ -35,11 +45,13 @@ namespace RFAW.Controllers
                       usuario => usuario.Id,
                       (pedido, usuario) => new {
                           pedido.Id,
+                          UsuarioNome = usuario.Nome,
                           UsuarioEmail = usuario.Email,
                           pedido.Pacote,
                           pedido.QuantidadeMoedas,
                           pedido.ValorPago,
-                          pedido.DataSolicitacao
+                          pedido.DataSolicitacao,
+                          NomeTitularPix = pedido.NomeTitularPix
                       })
                 .ToListAsync();
 
@@ -61,7 +73,7 @@ namespace RFAW.Controllers
             usuario.Moedas += pedido.QuantidadeMoedas;
 
             await _context.SaveChangesAsync();
-            return Ok();
+            return Ok(new { mensagem = "Pedido aprovado com sucesso!" });
         }
 
         [HttpPost("recusar-pedido/{id}")]
@@ -73,7 +85,7 @@ namespace RFAW.Controllers
 
             pedido.Status = "Recusado";
             await _context.SaveChangesAsync();
-            return Ok();
+            return Ok(new { mensagem = "Pedido recusado com sucesso!" });
         }
     }
 }
