@@ -84,13 +84,27 @@ namespace RFAW.Controllers
             var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == novaRifa.CriadorEmail);
             if (usuario == null) return BadRequest("Usuário não encontrado.");
 
-            int custoMoedas = (int)Math.Ceiling(novaRifa.QuantidadeCotas / 10.0);
+            int custoMoedas = 0;
+            switch (novaRifa.QuantidadeCotas)
+            {
+                case 50: custoMoedas = 75; break;
+                case 100: custoMoedas = 144; break;
+                case 150: custoMoedas = 207; break;
+                case 200: custoMoedas = 264; break;
+                case 250: custoMoedas = 315; break;
+                case 300: custoMoedas = 360; break;
+                case 350: custoMoedas = 399; break;
+                case 400: custoMoedas = 432; break;
+                case 450: custoMoedas = 459; break;
+                case 500: custoMoedas = 480; break;
+                default: return BadRequest("Quantidade de cotas inválida.");
+            }
 
             if (!usuario.IsAdmin)
             {
                 if (usuario.Moedas < custoMoedas)
                 {
-                    return BadRequest($"Saldo insuficiente. Você precisa de {custoMoedas} moedas, mas tem apenas {usuario.Moedas}.");
+                    return BadRequest($"Saldo insuficiente. Você precisa de {custoMoedas} moedas.");
                 }
                 usuario.Moedas -= custoMoedas;
             }
