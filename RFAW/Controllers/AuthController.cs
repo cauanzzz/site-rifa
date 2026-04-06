@@ -29,7 +29,7 @@ namespace RFAW.Controllers
             var existe = await _context.Usuarios.AnyAsync(u => u.Email == novoUsuario.Email);
             if (existe) return BadRequest("E-mail já cadastrado!");
 
-            novoUsuario.Moedas = 50;
+            novoUsuario.Moedas = 75;
             novoUsuario.Senha = BCrypt.Net.BCrypt.HashPassword(novoUsuario.Senha);
 
             _context.Usuarios.Add(novoUsuario);
