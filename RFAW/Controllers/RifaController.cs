@@ -35,6 +35,7 @@ namespace RFAW.Controllers
         public async Task<IActionResult> GetRifas()
         {
             var rifasResumo = await _context.Rifas
+                .Where(r => r.Status != "Encerrada")
                 .Select(r => new
                 {
                     Id = r.Id,
